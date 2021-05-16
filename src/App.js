@@ -1,25 +1,94 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from "react";
+import "./App.css";
+import { CardList } from "./component/Card-List/Card-List.component";
+import Nav from "./NavBar";
+import Button from "@material-ui/core/Button";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      series: [],
+      searchField: "",
+      page: 1,
+    };
+  }
+
+  componentDidMount() {
+    /* Using Multiple Fetch Statements Within componentDidMount */
+    Promise.all([
+      fetch(
+        `https://www.episodate.com/api/most-popular?page=${this.state.page}`
+      ).then((response) => response.json()),
+      fetch(
+        "https://www.episodate.com/api/search?q=Breaking%20Bad&page=1"
+      ).then((response) => response.json()),
+    ]).then(([urlone, urltwo]) =>
+      this.setState({ series: [...urlone.tv_shows, ...urltwo.tv_shows] })
+    );
+  }
+
+  render() {
+    const { series, searchField } = this.state;
+    const filterSeries = series.filter((serie) =>
+      serie.name.toLowerCase().includes(searchField.toLowerCase())
+    );
+
+    return (
+      <div className="App">
+        <Nav
+          handelchange={(e) => this.setState({ searchField: e.target.value })}
+        ></Nav>
+
+        <Button
+          onClick={() => {
+            let pages = this.state.page - 1;
+            fetch(`https://www.episodate.com/api/most-popular?page=${pages}`)
+              .then((response) => response.json())
+              .then((user) => this.setState({ series: user.tv_shows }));
+          }}
+          variant="outlined"
+          color="primary"
         >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+          PREV
+        </Button>
+        <Button
+          onClick={() => {
+            let pages = this.state.page + 1;
+            fetch(`https://www.episodate.com/api/most-popular?page=${pages}`)
+              .then((response) => response.json())
+              .then((user) => this.setState({ series: user.tv_shows }));
+          }}
+          variant="outlined"
+          color="secondary"
+        >
+          NEXT
+        </Button>
+
+        <CardList series={filterSeries} />
+        <button
+          onClick={() => {
+            let pages = this.state.page - 1;
+            fetch(`https://www.episodate.com/api/most-popular?page=${pages}`)
+              .then((response) => response.json())
+              .then((user) => this.setState({ series: user.tv_shows }));
+          }}
+        >
+          Prev
+        </button>
+        <button
+          onClick={() => {
+            let pages = this.state.page + 1;
+            fetch(`https://www.episodate.com/api/most-popular?page=${pages}`)
+              .then((response) => response.json())
+              .then((user) => this.setState({ series: user.tv_shows }));
+          }}
+        >
+          Next
+        </button>
+      </div>
+    );
+  }
 }
 
 export default App;
